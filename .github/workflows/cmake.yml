@@ -1,0 +1,77 @@
+name: CMake
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-${{ matrix.ubuntu_version }}
+    name: Ubuntu-${{ matrix.ubuntu_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu_version: [20.04, 22.04]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3 
+
+    - name: Configure CMake
+      run: cmake -DCMAKE_BUILD_TYPE="${{env.BUILD_TYPE}}" -B "${{github.workspace}}/build" 
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    - name: Run CTest
+      working-directory: ${{github.workspace}}/build/tests
+      run: ctest         
+      
+  MSVC:
+    name: windows-${{ matrix.win_version }}
+    runs-on: windows-${{ matrix.win_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        win_version: [2019, 2022]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3    
+
+      - name: Configure CMake
+        run: cmake -DCMAKE_BUILD_TYPE="${{env.BUILD_TYPE}}" -B "${{github.workspace}}/build" 
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        
+      - name: Run CTest
+        working-directory: ${{github.workspace}}/build/tests
+        run: ctest -C "${{env.BUILD_TYPE}}"
+
+  macos:
+    runs-on: macos-${{ matrix.macos_version }}
+    name: macos-${{ matrix.macos_version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        macos_version: [11, 12]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3    
+
+      - name: Configure CMake
+        run: cmake -DCMAKE_BUILD_TYPE="${{env.BUILD_TYPE}}" -B "${{github.workspace}}/build" 
+        
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        
+      - name: Run CTest
+        working-directory: ${{github.workspace}}/build/tests
+        run: ctest           
